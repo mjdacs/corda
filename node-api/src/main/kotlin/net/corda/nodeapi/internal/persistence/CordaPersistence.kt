@@ -92,7 +92,8 @@ class CordaPersistence(
         val jdbcUrl: String,
         cacheFactory: NamedCacheFactory,
         attributeConverters: Collection<AttributeConverter<*, *>> = emptySet(),
-        customClassLoader: ClassLoader? = null
+        customClassLoader: ClassLoader? = null,
+        val closeConnection: Boolean = true
 ) : Closeable {
     companion object {
         private val log = contextLogger()
@@ -236,7 +237,7 @@ class CordaPersistence(
                     throw e
                 }
             } finally {
-                quietly(transaction::close)
+                quietly { transaction.close() }
             }
         }
     }
