@@ -237,7 +237,7 @@ class CordaPersistence(
                     throw e
                 }
             } finally {
-                quietly { transaction.close() }
+                quietly(transaction::close)
             }
         }
     }
