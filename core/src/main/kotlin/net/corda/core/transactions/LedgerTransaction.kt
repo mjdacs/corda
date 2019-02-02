@@ -1,7 +1,9 @@
 package net.corda.core.transactions
 
 import net.corda.core.CordaInternal
+import net.corda.core.DeleteForDJVM
 import net.corda.core.KeepForDJVM
+import net.corda.core.StubOutForDJVM
 import net.corda.core.contracts.*
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowLogic
@@ -13,7 +15,6 @@ import net.corda.core.serialization.CordaSerializable
 import net.corda.core.serialization.DeprecatedConstructorForDeserialization
 import net.corda.core.serialization.internal.AttachmentsClassLoaderBuilder
 import net.corda.core.utilities.contextLogger
-import java.lang.UnsupportedOperationException
 import java.util.*
 import java.util.function.Predicate
 
@@ -152,11 +153,23 @@ private constructor(
             logger.warn("Network parameters on the LedgerTransaction with id: $id are null. Please don't use deprecated constructors of the LedgerTransaction. " +
                     "Use WireTransaction.toLedgerTransaction instead. The result of the verify method would not be accurate.")
             // Roll the dice - we're probably in flow context if we got here at all, which means we can fish the current params out.
-            params = FlowLogic.currentTopLevel?.serviceHub?.networkParameters
+            try {
+                params = getParamsFromFlowLogic()
+            } catch (e: UnsupportedOperationException) {
+                // Inside DJVM. This is unlikely to happen; there aren't really any reasons to create a LedgerTransaction inside contract
+                // logic so we're being pedantically correct here.
+            }
             if (params == null)
                 throw UnsupportedOperationException("Cannot verify a LedgerTransaction created using deprecated constructors outside of flow context.")
         }
         return params
+    }
+
+    @StubOutForDJVM
+    private fun getParamsFromFlowLogic(): NetworkParameters? {
+        // TODO: Why can't I make this build, even with the stub/delete annotations?
+        // return FlowLogic.currentTopLevel?.serviceHub?.networkParameters
+        TODO()
     }
 
     private fun createLtxForVerification(): LedgerTransaction {

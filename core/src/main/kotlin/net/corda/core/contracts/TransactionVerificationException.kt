@@ -253,6 +253,7 @@ abstract class TransactionVerificationException(val txId: SecureHash, message: S
      * This should never normally happen because before verification comes resolution, and if a peer can't provide a
      * new set of parameters, [TransactionResolutionException] will have already been thrown beforehand.
      */
+    @KeepForDJVM
     class UnknownParameters(txId: SecureHash, paramsHash: SecureHash) : TransactionVerificationException(txId,
             "Transaction specified network parameters $paramsHash but these parameters are not known.", null)
 }
